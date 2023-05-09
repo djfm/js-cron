@@ -106,6 +106,10 @@ export const schedule = async ({jobs, log, mailer, mailerFrom, emailNotification
 						log('error', `failed to send job report email for "${job.name}" to "${recipient}"`);
 					});
 				});
+
+				if (!failed) {
+					break;
+				}
 			}
 		} catch (err) {
 			const messageSummary = `failed to run job ${job.name}`;

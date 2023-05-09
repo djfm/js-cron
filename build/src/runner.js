@@ -85,6 +85,9 @@ const schedule = ({ jobs, log, mailer, mailerFrom, emailNotificationsRecipients:
                         log('error', `failed to send job report email for "${job.name}" to "${recipient}"`);
                     });
                 });
+                if (!failed) {
+                    break;
+                }
             }
         }
         catch (err) {
