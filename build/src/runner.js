@@ -57,8 +57,14 @@ const schedule = ({ jobs, log, mailer, mailerFrom, emailNotificationsRecipients:
                     ['stdout', (_c = result.stdout.trim()) !== null && _c !== void 0 ? _c : '[empty]'],
                     ['stderr', (_d = result.stderr.trim()) !== null && _d !== void 0 ? _d : '[empty]'],
                 ];
-                if (attempt > 1) {
+                if (attempt === job.maxTries && failed) {
                     sections.push(['all attempts have failed', `${attempt}/${job.maxTries}, all failed`]);
+                }
+                if (attempt > 1 && !failed) {
+                    sections.push(['some attempts have failed', `attempt ${attempt}/${job.maxTries} succeeded`]);
+                }
+                if (attempt === 1) {
+                    sections.push(['first attempt succeeded', `attempt ${attempt}/${job.maxTries} succeeded`]);
                 }
                 if (result.err) {
                     sections.push(['error', (0, util_1.stringFromMaybeError)(result.err)]);
@@ -96,7 +102,7 @@ const schedule = ({ jobs, log, mailer, mailerFrom, emailNotificationsRecipients:
         log('info', `scheduling job "${job.name}" to run in`, firstRunTimeout, 'ms');
         const run = makeJobRunner(job);
         setTimeout(() => {
-            log('info', `running job "${job.name}" for the first time`);
+            log('info', `running job "${job.name}" at scheduled time, then once every 24 hours`);
             run().then(() => {
                 log('info', `successfully ran job "${job.name}" for the first time`);
             }, () => {

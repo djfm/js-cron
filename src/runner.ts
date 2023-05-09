@@ -72,8 +72,16 @@ export const schedule = async ({jobs, log, mailer, mailerFrom, emailNotification
 					['stderr', result.stderr.trim() ?? '[empty]'],
 				];
 
-				if (attempt > 1) {
+				if (attempt === job.maxTries && failed) {
 					sections.push(['all attempts have failed', `${attempt}/${job.maxTries}, all failed`]);
+				}
+
+				if (attempt > 1 && !failed) {
+					sections.push(['some attempts have failed', `attempt ${attempt}/${job.maxTries} succeeded`]);
+				}
+
+				if (attempt === 1) {
+					sections.push(['first attempt succeeded', `attempt ${attempt}/${job.maxTries} succeeded`]);
 				}
 
 				if (result.err) {
@@ -127,7 +135,7 @@ export const schedule = async ({jobs, log, mailer, mailerFrom, emailNotification
 		const run = makeJobRunner(job);
 
 		setTimeout(() => {
-			log('info', `running job "${job.name}" for the first time`);
+			log('info', `running job "${job.name}" at scheduled time, then once every 24 hours`);
 
 			run().then(() => {
 				log('info', `successfully ran job "${job.name}" for the first time`);
