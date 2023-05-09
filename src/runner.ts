@@ -16,13 +16,51 @@ export type JobsContext = {
 const oneHourInMs = 60 * 60 * 1000;
 const oneDayInMs = 24 * oneHourInMs;
 
+type ExecResult = {
+	exitCode?: number;
+	err?: ExecException;
+	stdout: string;
+	stderr: string;
+};
+
+const asyncExec = async (cmd: string): Promise<ExecResult> => new Promise(resolve => {
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	const res = exec(cmd, (err: ExecException | null, stdout: string, stderr: string) => {
+		resolve({
+			err: err ?? undefined,
+			exitCode: res.exitCode ?? undefined,
+			stdout,
+			stderr,
+		});
+	});
+});
+
+const retryDelayMs = 5000;
+
 export const schedule = async ({jobs, log, mailer, mailerFrom, emailNotificationsRecipients: recipients}: JobsContext): Promise<void> => {
-	const makeJobRunner = (job: Job) => () => {
+	const makeJobRunner = (job: Job) => async () => {
 		try {
-			// eslint-disable-next-line @typescript-eslint/ban-types
-			const result = exec(job.fullPathToExecutable, (err: ExecException | null, stdout: string, stderr: string) => {
+			let attempt = 1;
+
+			for (; attempt <= job.maxTries; ++attempt) {
+				// eslint-disable-next-line no-await-in-loop
+				const result = await asyncExec(job.fullPathToExecutable);
+
 				const now = dateFmt(new Date());
-				const title = err
+
+				const failed = result.err ?? result.exitCode !== 0;
+
+				if (failed && attempt < job.maxTries) {
+					log('warning', `job ${job.name} at ${now} failed, retrying in ${retryDelayMs} ms`);
+					// eslint-disable-next-line no-await-in-loop
+					await new Promise(resolve => {
+						setTimeout(resolve, retryDelayMs);
+					});
+
+					continue;
+				}
+
+				const title = failed
 					? `warning, job ${job.name} at ${now} appears to have failed`
 					: `job ${job.name} at ${now} appears to have run successfully, but check the included logs to be sure`;
 
@@ -30,23 +68,22 @@ export const schedule = async ({jobs, log, mailer, mailerFrom, emailNotification
 					['job name', job.name],
 					['job path', job.fullPathToExecutable],
 					['status', `the process exited with status ${result.exitCode ?? '[unknown]'}`],
-					['stdout', stdout ?? '[empty]'],
-					['stderr', stderr ?? '[empty]'],
+					['stdout', result.stdout.trim() ?? '[empty]'],
+					['stderr', result.stderr.trim() ?? '[empty]'],
 				];
 
-				if (err) {
-					sections.push(['error', stringFromMaybeError(err)]);
+				if (attempt > 1) {
+					sections.push(['all attempts have failed', `${attempt}/${job.maxTries}, all failed`]);
+				}
+
+				if (result.err) {
+					sections.push(['error', stringFromMaybeError(result.err)]);
 				}
 
 				const text = sections.map(([name, content]) => `${name}:\n${content}`).join('\n\n');
 				const html = sections.map(([name, content]) => `<h2>${name}</h2><pre>${content}</pre>`).join('<p><br></p>');
 
-				log(
-					err ? 'error' : 'info',
-					title,
-					'\n',
-					text,
-				);
+				log(failed ? 'error' : 'info', title, '\n', text);
 
 				recipients.forEach(recipient => {
 					mailer.sendMail({
@@ -61,7 +98,7 @@ export const schedule = async ({jobs, log, mailer, mailerFrom, emailNotification
 						log('error', `failed to send job report email for "${job.name}" to "${recipient}"`);
 					});
 				});
-			});
+			}
 		} catch (err) {
 			const messageSummary = `failed to run job ${job.name}`;
 			log('error', messageSummary, err);
@@ -91,7 +128,13 @@ export const schedule = async ({jobs, log, mailer, mailerFrom, emailNotification
 
 		setTimeout(() => {
 			log('info', `running job "${job.name}" for the first time`);
-			run();
+
+			run().then(() => {
+				log('info', `successfully ran job "${job.name}" for the first time`);
+			}, () => {
+				log('error', `failed to run job "${job.name}" for the first time`);
+			});
+
 			setInterval(run, oneDayInMs);
 		}, firstRunTimeout);
 	};

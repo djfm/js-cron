@@ -57,6 +57,10 @@ export class Job {
 	@Min(0)
 	@Max(59)
 		second = 0;
+
+	@IsInt()
+	@Min(1)
+		maxTries = 1;
 }
 
 export class Config {

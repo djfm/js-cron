@@ -57,6 +57,7 @@ class Job {
         this.hour = -1;
         this.minute = -1;
         this.second = 0;
+        this.maxTries = 1;
     }
 }
 __decorate([
@@ -85,6 +86,11 @@ __decorate([
     (0, class_validator_1.Max)(59),
     __metadata("design:type", Object)
 ], Job.prototype, "second", void 0);
+__decorate([
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Object)
+], Job.prototype, "maxTries", void 0);
 exports.Job = Job;
 class Config {
     constructor() {

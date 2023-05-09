@@ -14,29 +14,58 @@ const child_process_1 = require("child_process");
 const util_1 = require("./util");
 const oneHourInMs = 60 * 60 * 1000;
 const oneDayInMs = 24 * oneHourInMs;
+const asyncExec = (cmd) => __awaiter(void 0, void 0, void 0, function* () {
+    return new Promise(resolve => {
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        const res = (0, child_process_1.exec)(cmd, (err, stdout, stderr) => {
+            var _a;
+            resolve({
+                err: err !== null && err !== void 0 ? err : undefined,
+                exitCode: (_a = res.exitCode) !== null && _a !== void 0 ? _a : undefined,
+                stdout,
+                stderr,
+            });
+        });
+    });
+});
+const retryDelayMs = 5000;
 const schedule = ({ jobs, log, mailer, mailerFrom, emailNotificationsRecipients: recipients }) => __awaiter(void 0, void 0, void 0, function* () {
-    const makeJobRunner = (job) => () => {
+    const makeJobRunner = (job) => () => __awaiter(void 0, void 0, void 0, function* () {
+        var _a, _b, _c, _d;
         try {
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            const result = (0, child_process_1.exec)(job.fullPathToExecutable, (err, stdout, stderr) => {
-                var _a;
+            let attempt = 1;
+            for (; attempt <= job.maxTries; ++attempt) {
+                // eslint-disable-next-line no-await-in-loop
+                const result = yield asyncExec(job.fullPathToExecutable);
                 const now = (0, util_1.dateFmt)(new Date());
-                const title = err
+                const failed = (_a = result.err) !== null && _a !== void 0 ? _a : result.exitCode !== 0;
+                if (failed && attempt < job.maxTries) {
+                    log('warning', `job ${job.name} at ${now} failed, retrying in ${retryDelayMs} ms`);
+                    // eslint-disable-next-line no-await-in-loop
+                    yield new Promise(resolve => {
+                        setTimeout(resolve, retryDelayMs);
+                    });
+                    continue;
+                }
+                const title = failed
                     ? `warning, job ${job.name} at ${now} appears to have failed`
                     : `job ${job.name} at ${now} appears to have run successfully, but check the included logs to be sure`;
                 const sections = [
                     ['job name', job.name],
                     ['job path', job.fullPathToExecutable],
-                    ['status', `the process exited with status ${(_a = result.exitCode) !== null && _a !== void 0 ? _a : '[unknown]'}`],
-                    ['stdout', stdout !== null && stdout !== void 0 ? stdout : '[empty]'],
-                    ['stderr', stderr !== null && stderr !== void 0 ? stderr : '[empty]'],
+                    ['status', `the process exited with status ${(_b = result.exitCode) !== null && _b !== void 0 ? _b : '[unknown]'}`],
+                    ['stdout', (_c = result.stdout.trim()) !== null && _c !== void 0 ? _c : '[empty]'],
+                    ['stderr', (_d = result.stderr.trim()) !== null && _d !== void 0 ? _d : '[empty]'],
                 ];
-                if (err) {
-                    sections.push(['error', (0, util_1.stringFromMaybeError)(err)]);
+                if (attempt > 1) {
+                    sections.push(['all attempts have failed', `${attempt}/${job.maxTries}, all failed`]);
+                }
+                if (result.err) {
+                    sections.push(['error', (0, util_1.stringFromMaybeError)(result.err)]);
                 }
                 const text = sections.map(([name, content]) => `${name}:\n${content}`).join('\n\n');
                 const html = sections.map(([name, content]) => `<h2>${name}</h2><pre>${content}</pre>`).join('<p><br></p>');
-                log(err ? 'error' : 'info', title, '\n', text);
+                log(failed ? 'error' : 'info', title, '\n', text);
                 recipients.forEach(recipient => {
                     mailer.sendMail({
                         from: mailerFrom,
@@ -50,13 +79,13 @@ const schedule = ({ jobs, log, mailer, mailerFrom, emailNotificationsRecipients:
                         log('error', `failed to send job report email for "${job.name}" to "${recipient}"`);
                     });
                 });
-            });
+            }
         }
         catch (err) {
             const messageSummary = `failed to run job ${job.name}`;
             log('error', messageSummary, err);
         }
-    };
+    });
     const scheduleJob = (job) => {
         const now = new Date();
         const desiredNextRun = new Date(now.getFullYear(), now.getMonth(), now.getDate(), job.hour, job.minute, job.second);
@@ -68,7 +97,11 @@ const schedule = ({ jobs, log, mailer, mailerFrom, emailNotificationsRecipients:
         const run = makeJobRunner(job);
         setTimeout(() => {
             log('info', `running job "${job.name}" for the first time`);
-            run();
+            run().then(() => {
+                log('info', `successfully ran job "${job.name}" for the first time`);
+            }, () => {
+                log('error', `failed to run job "${job.name}" for the first time`);
+            });
             setInterval(run, oneDayInMs);
         }, firstRunTimeout);
     };
