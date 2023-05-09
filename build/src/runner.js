@@ -27,9 +27,9 @@ const schedule = ({ jobs, log, mailer, mailerFrom, emailNotificationsRecipients:
                 const sections = [
                     ['job name', job.name],
                     ['job path', job.fullPathToExecutable],
-                    ['status', `the process exited with status ${(_a = result.exitCode) !== null && _a !== void 0 ? _a : '[unknown]'}}`],
-                    ['stdout', stdout],
-                    ['stderr', stderr],
+                    ['status', `the process exited with status ${(_a = result.exitCode) !== null && _a !== void 0 ? _a : '[unknown]'}`],
+                    ['stdout', stdout !== null && stdout !== void 0 ? stdout : '[empty]'],
+                    ['stderr', stderr !== null && stderr !== void 0 ? stderr : '[empty]'],
                 ];
                 if (err) {
                     sections.push(['error', (0, util_1.stringFromMaybeError)(err)]);
