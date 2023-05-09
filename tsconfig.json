@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"module": "commonjs",
+		"strict": true,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"alwaysStrict": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"jsx": "react",
+		"esModuleInterop": true,
+		"downlevelIteration": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"typeRoots": ["node_modules/@types", "src/types"],
+		"outDir": "build",
+		"skipLibCheck": true,
+		"sourceMap": true
+	},
+	"include": ["."],
+	"exclude": ["node_modules", "build", "adminsWhitelist.dist.ts"],
+	"ts-node": {
+		"files": true,
+	}
+}
