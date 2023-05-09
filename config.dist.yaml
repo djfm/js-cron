@@ -1,0 +1,17 @@
+smtp:
+  host: smtp.gmail.com
+  port: 465
+  secure: true
+  auth:
+    user: some@email.address
+    pass: itsPassword
+
+emailNotificationsRecipients:
+  - admin@somewhere.com
+  - other@else.where
+
+jobs:
+  - name: 'ls'
+    fullPathToExecutable: /usr/bin/ls
+    hour: 12
+    minute: 31

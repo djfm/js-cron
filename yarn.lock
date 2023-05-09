@@ -197,10 +197,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/reflect-metadata@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@types/reflect-metadata@npm:0.1.0"
+  dependencies:
+    reflect-metadata: "*"
+  checksum: 9325a43186aafdf72f14977bdaed95b4a40005a919c8a96622de14bb2f2dbf41d9882e50bfcff4169f9a00df0d9dcee931fdd999d15776f8e5485fba40ff5b99
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.3.12":
   version: 7.3.13
   resolution: "@types/semver@npm:7.3.13"
   checksum: 00c0724d54757c2f4bc60b5032fe91cda6410e48689633d5f35ece8a0a66445e3e57fa1d6e07eb780f792e82ac542948ec4d0b76eb3484297b79bd18b8cf1cb0
+  languageName: node
+  linkType: hard
+
+"@types/validator@npm:^13.7.10":
+  version: 13.7.16
+  resolution: "@types/validator@npm:13.7.16"
+  checksum: 16dfcbe1d3132ce6424ad50ebf8e110b38ba24dfb780686f8461fe68fa4b1d0ccd6debe82c7bf489a651e44d6bf23c56e9aa06da8c0aac567e3e255afecec90e
   languageName: node
   linkType: hard
 
@@ -505,6 +521,24 @@ __metadata:
     ansi-styles: ^4.1.0
     supports-color: ^7.1.0
   checksum: fe75c9d5c76a7a98d45495b91b2172fa3b7a09e0cc9370e5c8feb1c567b85c4288e2b3fded7cfdd7359ac28d6b3844feb8b82b8686842e93d23c827c417e83fc
+  languageName: node
+  linkType: hard
+
+"class-transformer@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "class-transformer@npm:0.5.1"
+  checksum: f191c8b4cc4239990f5efdd790cabdd852c243ed66248e39f6616a349c910c6eed2d9fd1fbf7ee6ea89f69b4f1d0b493b27347fe0cd0ae26b47c3745a805b6d3
+  languageName: node
+  linkType: hard
+
+"class-validator@npm:^0.14.0":
+  version: 0.14.0
+  resolution: "class-validator@npm:0.14.0"
+  dependencies:
+    "@types/validator": ^13.7.10
+    libphonenumber-js: ^1.10.14
+    validator: ^13.7.0
+  checksum: f62e4a0ad24cee68f4b2bc70d32b96de90cb598f96bde362b4dbf4234151af8eb6ae225458312a38fc49fa3959844cf61c60e731a8205e9a570454cff8de2710
   languageName: node
   linkType: hard
 
@@ -1380,6 +1414,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"libphonenumber-js@npm:^1.10.14":
+  version: 1.10.30
+  resolution: "libphonenumber-js@npm:1.10.30"
+  checksum: 677bdd25b709cc55f10c599df09e67b501554578e4700ae31d9f2153b4e6847710d2454b4551f19df3e443eb836c0f287a12159ee6acd931150407c0eaf010a0
+  languageName: node
+  linkType: hard
+
 "locate-path@npm:^6.0.0":
   version: 6.0.0
   resolution: "locate-path@npm:6.0.0"
@@ -1690,6 +1731,13 @@ __metadata:
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: f7a19ac3496de32ca9ae12aa030f00f14a3d45374f1ceca0af707c831b2a6098ef0d6bdae51bd437b0a306d7f01d4677fcc8de7c0d331eb47ad0f46130e53c5f
+  languageName: node
+  linkType: hard
+
+"reflect-metadata@npm:*, reflect-metadata@npm:^0.1.13":
+  version: 0.1.13
+  resolution: "reflect-metadata@npm:0.1.13"
+  checksum: 798d379a7b6f6455501145419505c97dd11cbc23857a386add2b9ef15963ccf15a48d9d15507afe01d4cd74116df8a213247200bac00320bd7c11ddeaa5e8fb4
   languageName: node
   linkType: hard
 
@@ -2035,6 +2083,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"validator@npm:^13.7.0":
+  version: 13.9.0
+  resolution: "validator@npm:13.9.0"
+  checksum: e2c936f041f61faa42bafd17c6faddf939498666cd82e88d733621c286893730b008959f4cb12ab3e236148a4f3805c30b85e3dcf5e0efd8b0cbcd36c02bfc0c
+  languageName: node
+  linkType: hard
+
 "which-boxed-primitive@npm:^1.0.2":
   version: 1.0.2
   resolution: "which-boxed-primitive@npm:1.0.2"
@@ -2114,15 +2169,19 @@ __metadata:
   dependencies:
     "@types/node": ^18.15.10
     "@types/nodemailer": ^6.4.7
+    "@types/reflect-metadata": ^0.1.0
     "@types/yaml": ^1.9.7
     "@typescript-eslint/eslint-plugin": ^5.57.0
     "@typescript-eslint/parser": ^5.57.0
+    class-transformer: ^0.5.1
+    class-validator: ^0.14.0
     editorconfig: ^1.0.2
     eslint: ^8.36.0
     eslint-config-xo: ^0.43.1
     eslint-config-xo-typescript: ^0.56.0
     eslint-plugin-react: ^7.32.2
     nodemailer: ^6.9.1
+    reflect-metadata: ^0.1.13
     ts-node: ^10.9.1
     typescript: ^5.0.2
     yaml: ^2.2.1

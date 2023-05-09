@@ -39,3 +39,5 @@ export const findPackageJsonDir = async (dir: string): Promise<string> => {
 
 	throw new Error(`Cannot find package.json in ${dir}`);
 };
+
+export const dateFmt = (date: Date): string => `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;

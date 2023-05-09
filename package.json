@@ -29,7 +29,11 @@
   "dependencies": {
     "@types/node": "^18.15.10",
     "@types/nodemailer": "^6.4.7",
+    "@types/reflect-metadata": "^0.1.0",
     "@types/yaml": "^1.9.7",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "reflect-metadata": "^0.1.13",
     "yaml": "^2.2.1"
   }
 }

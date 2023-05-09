@@ -1,48 +1,82 @@
+import 'reflect-metadata';
+
 import {join} from 'path';
+import {inspect} from 'util';
+import {readFile} from 'fs/promises';
+import {parse} from 'yaml';
+
+import {createTransport} from 'nodemailer';
+
+import schedule, {type JobsContext} from './runner';
+
 import {createWriteStream} from 'fs';
 
-import nodemailer from 'nodemailer';
+import {
+	validate,
+} from 'class-validator';
 
-import {getEnv} from './jobs';
+import {
+	plainToInstance,
+} from 'class-transformer';
 
-import loadConfigYamlRaw from './server/lib/config-loader/loadConfigYamlRaw';
-import getSmtpConfig from './server/lib/config-loader/getSmtpConfig';
+import {findPackageJsonDir, dateFmt} from './util';
+import {Config, type LogFunction} from './lib';
 
-import startJobs, {type JobsContext} from './server/jobs';
-import {makeCreateDefaultLogger} from './server/lib/logger';
-import {findPackageJsonDir} from './util';
-import {stringFromMaybeError} from './util';
+const argsForDisplay = (...args: unknown[]) => args.map(arg => {
+	if (typeof arg === 'string') {
+		return arg.toLowerCase();
+	}
+
+	return inspect(arg, {depth: Infinity});
+});
 
 const main = async () => {
 	const root = await findPackageJsonDir(__dirname);
-	const logsDir = join(root, logsDirName);
-	const writeStream = createWriteStream(join(logsDir, 'cron.log'), {flags: 'a'});
-	const createDefaultLogger = makeCreateDefaultLogger(writeStream);
-	const log = createDefaultLogger('<cron>');
+	const configYaml = parse(await readFile(join(root, 'config.yaml'), 'utf8')) as unknown;
+	const config = plainToInstance(Config, configYaml);
+	const logFilePath = join(root, 'logs', 'cron.log');
+	const logStream = createWriteStream(logFilePath, {flags: 'a'});
 
-	const rawConfig = await loadConfigYamlRaw();
-	const smtpConfig = await getSmtpConfig(rawConfig);
+	const configErrors = await validate(config);
 
-	const mailer = nodemailer.createTransport(smtpConfig);
+	const log: LogFunction = (level, ...args) => {
+		const now = new Date();
 
-	const jobsContext: JobsContext = {
-		env: getEnv(),
-		mailer,
-		mailerFrom: smtpConfig.auth.user,
-		log,
+		logStream.write(JSON.stringify({
+			level,
+			date: now,
+			args,
+		}));
+		logStream.write('\n');
+
+		console.log(`[${level} @ ${dateFmt(now)}]`, ...argsForDisplay(...args));
 	};
 
-	startJobs(jobsContext).catch(err => {
-		log('error', 'an error cancelled the CRONs', err);
-		mailer.sendMail({
-			from: smtpConfig.auth.user,
-			to: 'fm.de.jouvencel@gmail.com',
-			subject: 'An error cancelled the CRONs in YTDPNL',
-			text: stringFromMaybeError(err),
-		}).catch(err => {
-			log('error', 'an error occurred while sending an error email', err);
-		});
-	});
+	if (configErrors.length > 0) {
+		log('error', 'config validation failed', configErrors);
+		return;
+	}
+
+	log('success', 'config validation passed', config);
+
+	const mailer = createTransport(config.smtp);
+
+	const jobsContext: JobsContext = {
+		log,
+		mailerFrom: config.smtp.auth.user,
+		mailer,
+		jobs: config.jobs,
+		emailNotificationsRecipients: config.emailNotificationsRecipients,
+	};
+
+	schedule(jobsContext).then(
+		() => {
+			log('success', '`jobs have been scheduled, please keep this window open otherwise they will not run');
+		},
+		err => {
+			log('error', 'an error occurred in the CRONs', err);
+		},
+	);
 };
 
 main().catch(err => {
