@@ -61,7 +61,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         emailNotificationsRecipients: config.emailNotificationsRecipients,
     };
     (0, runner_1.default)(jobsContext).then(() => {
-        log('success', '`jobs have been scheduled, please keep this window open otherwise they will not run');
+        log('success', `${config.jobs.length} jobs have been scheduled, please keep this window open otherwise they will not run!`);
     }, err => {
         log('error', 'an error occurred in the CRONs', err);
     });
